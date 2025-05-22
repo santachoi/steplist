@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기관명 회의 순서 편집기</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 50px; /* Footer 공간 확보 */
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+        }
+
+        h1#mainPageTitle { 
+            color: #2c3e50;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 2.2em; 
+        }
+        
+        .meeting-title-display {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #34495e;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .meeting-date-display {
+            text-align: right;
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 1rem;
+        }
+
+        h2.list-header {
+            color: #34495e;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+        
+        .collapsible-header {
+            color: #34495e;
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            user-select: none; 
+            padding: 8px 0;
+            position: relative; 
+        }
+        .collapsible-header:hover:not(.button-style) { 
+            background-color: #f9f9f9;
+        }
+        .toggle-indicator {
+            font-weight: bold;
+            font-family: monospace; 
+        }
+
+        #toggleMeetingInfoSection.collapsible-header.button-style {
+            background-color: #e9ecef; 
+            border: 1px solid #ced4da;
+            padding: 10px 15px;
+            border-radius: 4px;
+            color: #495057; 
+            font-size: 0.9em; 
+            font-weight: normal; 
+            text-align: left;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 0; 
+        }
+        #toggleMeetingInfoSection.collapsible-header.button-style:hover {
+            background-color: #dee2e6; 
+        }
+        #toggleMeetingInfoSection.collapsible-header.button-style .toggle-indicator {
+            margin-left: 0; 
+        }
+
+
+        .input-section { 
+            margin-top: 20px; 
+            margin-bottom: 10px; 
+        }
+        .input-section h4 { 
+            color: #34495e;
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            font-size: 1.0em; 
+        }
+
+
+        .meeting-info-section { 
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+         .meeting-info-section .collapsible-header:not(.button-style) {
+             margin-bottom: 0;
+         }
+
+
+        .collapsible-content {
+            max-height: 1000px; 
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding-top 0.3s ease-out, padding-bottom 0.3s ease-out;
+            padding-top: 10px; 
+        }
+        .collapsible-content.collapsed {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            overflow: hidden;
+        }
+        
+        .meeting-info-inputs { 
+            display: flex;
+            flex-wrap: wrap; 
+            gap: 15px;
+        }
+        .meeting-info-inputs .form-group {
+            margin-bottom: 0; 
+            flex: 1 1 200px; 
+            min-width: 180px; 
+        }
+        .meeting-info-inputs .form-group.date-group {
+            flex: 1 1 200px; 
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="date"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 15px;
+            height: 40px;
+        }
+
+        .input-area {
+            display: flex;
+            align-items: center;
+        }
+
+        #eventInput {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px 0 0 4px;
+            font-size: 16px;
+            outline: none;
+            min-width: 0;
+        }
+        #eventInput:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+
+        #levelSelect {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-left: none;
+            border-right: none;
+            font-size: 16px;
+            height: 40px;
+            background-color: white;
+            margin-right: -1px;
+        }
+
+        #addButton {
+            padding: 10px 20px;
+            background-color: #6c757d; 
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            font-size: 16px;
+            height: 40px;
+            transition: background-color 0.2s ease;
+        }
+        #addButton:hover {
+            background-color: #5a6268; 
+        }
+
+        #eventList {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            min-height: 100px;
+        }
+
+        #eventList li {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            padding: 0;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: stretch;
+            cursor: grab;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+            overflow: visible; 
+            position: relative;
+        }
+        
+        .item-color-bar-vertical {
+            width: 12px;
+            flex-shrink: 0;
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.2s ease;
+        }
+
+        #eventList li .content-area {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            padding: 8px 10px;
+            min-width: 0; 
+            transition: padding-left 0.2s ease;
+        }
+
+        .edit-palette {
+            display: none;
+            position: absolute;
+            top: 0; 
+            left: 15px;
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 20;
+            min-width: 260px;
+        }
+        .edit-palette h4 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .palette-section {
+            margin-bottom: 10px;
+        }
+        .palette-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 24px);
+            gap: 4px;
+        }
+
+        .color-palette-button {
+            width: 22px;
+            height: 22px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        .color-palette-button:hover {
+            border-color: #333;
+            transform: scale(1.1);
+        }
+        
+        .level-control-in-palette label {
+            margin-right: 5px;
+            font-size: 0.9em;
+        }
+        .level-control-in-palette select {
+            padding: 4px 6px;
+            font-size: 0.9em;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+        .palette-actions {
+            text-align: right;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            display: flex; 
+            justify-content: flex-end; 
+            gap: 8px; 
+        }
+        .palette-save-btn {
+            padding: 6px 12px;
+            font-size: 0.9em;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .palette-save-btn:hover {
+            background-color: #0056b3;
+        }
+        .palette-delete-btn { 
+            padding: 6px 12px;
+            font-size: 0.9em;
+            background-color: #dc3545; 
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .palette-delete-btn:hover {
+            background-color: #c82333;
+        }
+        
+        #eventList li:hover { background-color: #f0f0f0; }
+        #eventList li.dragging { opacity: 0.5; background: #e0f7fa; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+
+        .placeholder { background: #cce5ff; height: 2px; margin: 6px 0; border: 1px dashed #007bff; border-radius: 1px; box-sizing: border-box; }
+        
+        .item-controls {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .item-controls button { 
+            margin-left: 8px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            border: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .save-text-btn, .cancel-text-btn { background-color: #6c757d; color: white; }
+        .save-text-btn:hover, .cancel-text-btn:hover { background-color: #5a6268; }
+
+        .event-text-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            margin-right: 10px;
+        }
+
+        .event-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+            padding: 4px 6px;
+            border: 1px solid transparent;
+            min-height: 1.2em;
+            outline: none;
+            cursor: text;
+            width: 100%;
+            font-size: 18px; 
+            font-weight: 600; 
+        }
+        #eventList li.editing-text .event-text {
+            border: 1px solid #ccc;
+            background-color: #fff;
+        }
+
+        /* Footer Signature Style */
+        #footer-signature {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.65em; 
+            color: #aaa;      
+            z-index: 1000;     
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="mainPageTitle">기관명</h1>
+
+        <div id="meetingTitleDisplay" class="meeting-title-display">회의 제목이 여기에 표시됩니다.</div>
+        <div id="meetingDateDisplay" class="meeting-date-display"></div>
+
+        <h2 class="list-header">회의순서</h2>
+        <ul id="eventList"></ul>
+
+
+        <div class="meeting-info-section"> 
+            <h3 id="toggleMeetingInfoSection" class="collapsible-header button-style">
+                회의 정보 설정 
+                <span class="toggle-indicator">[+]</span>
+            </h3>
+            <div id="meetingInfoContent" class="collapsible-content">
+                <div class="meeting-info-inputs">
+                    <div class="form-group">
+                        <label for="mainOrganizationTitleInput">기관/회의체명</label>
+                        <input type="text" id="mainOrganizationTitleInput" value="기관명">
+                    </div>
+                    <div class="form-group">
+                        <label for="meetingTitleInput">회의 제목</label>
+                        <input type="text" id="meetingTitleInput" placeholder="회의 제목을 입력하세요...">
+                    </div>
+                    <div class="form-group date-group">
+                        <label for="meetingDateInput">회의 날짜</label>
+                        <input type="date" id="meetingDateInput">
+                    </div>
+                </div>
+
+                
+                <div class="input-section">
+                    <h4>새 항목 추가</h4>
+                    <div id="newItemContent">
+                        <div class="input-area">
+                            <input type="text" id="eventInput" placeholder="회의 내용을 입력하세요">
+                            <select id="levelSelect" title="들여쓰기 수준 선택">
+                                <option value="0">들여쓰기 0</option>
+                                <option value="1">들여쓰기 1</option>
+                                <option value="2">들여쓰기 2</option>
+                                <option value="3">들여쓰기 3</option>
+                                <option value="4">들여쓰기 4</option>
+                                <option value="5">들여쓰기 5</option>
+                            </select>
+                            <button id="addButton">추가</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="footer-signature">A Youjin! : v0.1 20250522 santachoi</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const eventInput = document.getElementById('eventInput');
+            const addButton = document.getElementById('addButton');
+            const eventList = document.getElementById('eventList');
+            const levelSelect = document.getElementById('levelSelect');
+
+            const mainPageTitleDisplay = document.getElementById('mainPageTitle'); 
+            const mainOrganizationTitleInput = document.getElementById('mainOrganizationTitleInput'); 
+
+            const meetingTitleInput = document.getElementById('meetingTitleInput');
+            const meetingDateInput = document.getElementById('meetingDateInput');
+            const meetingTitleDisplay = document.getElementById('meetingTitleDisplay');
+            const meetingDateDisplay = document.getElementById('meetingDateDisplay');
+            
+            const toggleMeetingInfoSection = document.getElementById('toggleMeetingInfoSection');
+            const meetingInfoContent = document.getElementById('meetingInfoContent');
+
+            let draggedItem = null;
+            let placeholder = null;
+            let currentEditPalette = null;
+            let originalPaletteState = { color: null, level: null };
+
+            const colorPalette = [ 
+                '#000000', '#404040', '#808080', '#C0C0C0', '#FFFFFF', '#A0A0A0', '#606060', '#202020',
+                '#FF0000', '#CC0000', '#990000', '#660000', '#FF6666', '#FFCCCC', '#800000', '#B22222',
+                '#FFFF00', '#CCCC00', '#999900', '#666600', '#FFFF66', '#FFFFCC', '#808000', '#F0E68C',
+                '#00FF00', '#00CC00', '#009900', '#006600', '#66FF66', '#CCFFCC', '#008000', '#90EE90',
+                '#00FFFF', '#00CCCC', '#009999', '#006666', '#66FFFF', '#CCFFFF', '#008080', '#AFEEEE',
+                '#0000FF', '#0000CC', '#000099', '#000066', '#6666FF', '#CCCCFF', '#000080', '#ADD8E6',
+                '#FF00FF', '#CC00CC', '#990099', '#660066', '#FF66FF', '#FFCCFF', '#800080', '#DDA0DD',
+                '#FFA500', '#FF8C00', '#FF7F50', '#FF6347', '#FFD700', '#F0C800', '#D2B48C', '#BC8F8F'
+            ];
+            let initialColorIndex = 0;
+
+            const INDENTATION_WIDTH = 30;
+            const MAX_LEVEL = 5;
+
+            Array.from(levelSelect.options).forEach(option => {
+                option.textContent = `들여쓰기 ${option.value}`;
+            });
+
+            function setupCollapsible(toggleElement, contentElement, startCollapsed = true) {
+                const indicator = toggleElement.querySelector('.toggle-indicator');
+                
+                function updateIndicator(isCollapsed) {
+                    if (indicator) {
+                        indicator.textContent = isCollapsed ? '[+]' : '[-]';
+                    }
+                }
+
+                if (startCollapsed) {
+                    contentElement.classList.add('collapsed');
+                    updateIndicator(true);
+                } else {
+                    contentElement.classList.remove('collapsed');
+                    updateIndicator(false);
+                }
+
+                toggleElement.addEventListener('click', () => {
+                    const isCollapsed = contentElement.classList.toggle('collapsed');
+                    updateIndicator(isCollapsed);
+                });
+            }
+
+            setupCollapsible(toggleMeetingInfoSection, meetingInfoContent, true);
+
+            mainOrganizationTitleInput.addEventListener('input', () => {
+                mainPageTitleDisplay.textContent = mainOrganizationTitleInput.value || "기관명"; 
+            });
+
+
+            meetingTitleInput.addEventListener('input', () => {
+                meetingTitleDisplay.textContent = meetingTitleInput.value || "회의 제목이 여기에 표시됩니다.";
+            });
+
+            meetingDateInput.addEventListener('input', () => {
+                if (meetingDateInput.value) {
+                    const date = new Date(meetingDateInput.value);
+                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                    meetingDateDisplay.textContent = date.toLocaleDateString('ko-KR', options);
+                } else {
+                    meetingDateDisplay.textContent = "";
+                }
+            });
+
+
+            function updateItemContentAreaPadding(item) {
+                const contentArea = item.querySelector('.content-area');
+                const level = parseInt(item.dataset.level) || 0;
+                contentArea.style.paddingLeft = `${10 + level * INDENTATION_WIDTH}px`;
+            }
+            function updatePlaceholderIndent(placeholderEl, level) {
+                 placeholderEl.style.marginLeft = `${12 + 10 + level * INDENTATION_WIDTH}px`;
+            }
+
+            function closeAllEditPalettes(saveChanges = false, targetLi = null, colorBar = null) {
+                if (currentEditPalette) {
+                    const paletteIsStillInDom = document.body.contains(currentEditPalette);
+
+                    if (!saveChanges && targetLi && colorBar && paletteIsStillInDom && targetLi.contains(currentEditPalette)) {
+                        if (originalPaletteState.color) colorBar.style.backgroundColor = originalPaletteState.color;
+                        if (originalPaletteState.level !== undefined) {
+                             targetLi.dataset.level = originalPaletteState.level;
+                             updateItemContentAreaPadding(targetLi);
+                             const levelSelectInPalette = currentEditPalette.querySelector('.level-control-in-palette select');
+                             if (levelSelectInPalette) levelSelectInPalette.value = originalPaletteState.level;
+                        }
+                    }
+                    if(paletteIsStillInDom) currentEditPalette.style.display = 'none';
+                    currentEditPalette = null;
+                }
+            }
+            document.addEventListener('click', (e) => {
+                if (currentEditPalette && !currentEditPalette.contains(e.target) && 
+                    !e.target.classList.contains('item-color-bar-vertical')) {
+                    
+                    let activeLiWithPalette = null;
+                    for (const li of eventList.children) {
+                        if (li.querySelector('.edit-palette') === currentEditPalette) {
+                            activeLiWithPalette = li;
+                            break;
+                        }
+                    }
+
+                    if (activeLiWithPalette) {
+                        const colorBar = activeLiWithPalette.querySelector('.item-color-bar-vertical');
+                        closeAllEditPalettes(false, activeLiWithPalette, colorBar);
+                    } else {
+                        closeAllEditPalettes();
+                    }
+                }
+            });
+
+            function addEventItem(text = null, level = 0, itemColor = null, insertBeforeEl = null) {
+                const eventTextValue = text === null ? eventInput.value : text;
+                if (eventTextValue.trim() === '' && text === null) {
+                    alert('회의 내용을 입력해주세요.'); return null;
+                }
+                const currentLevel = text === null ? parseInt(levelSelect.value) : level;
+
+                const li = document.createElement('li');
+                li.draggable = true;
+                li.dataset.level = currentLevel;
+
+                const currentItemColor = itemColor || colorPalette[initialColorIndex % colorPalette.length];
+                if (text === null && itemColor === null) initialColorIndex++;
+
+                const colorBarVertical = document.createElement('div');
+                colorBarVertical.className = 'item-color-bar-vertical';
+                colorBarVertical.style.backgroundColor = currentItemColor;
+                
+                const editPalette = document.createElement('div');
+                editPalette.className = 'edit-palette';
+                editPalette.addEventListener('click', e => e.stopPropagation());
+
+                const colorSectionTitle = document.createElement('h4');
+                colorSectionTitle.textContent = '색상 변경';
+                editPalette.appendChild(colorSectionTitle);
+                const colorGrid = document.createElement('div');
+                colorGrid.className = 'color-grid';
+                colorPalette.forEach(color => {
+                    const colorBtn = document.createElement('button');
+                    colorBtn.className = 'color-palette-button';
+                    colorBtn.style.backgroundColor = color;
+                    colorBtn.title = color;
+                    colorGrid.appendChild(colorBtn);
+                });
+                editPalette.appendChild(colorGrid);
+
+                const levelSectionTitle = document.createElement('h4');
+                levelSectionTitle.textContent = '들여쓰기 변경';
+                editPalette.appendChild(levelSectionTitle);
+                const levelControlInPalette = document.createElement('div');
+                levelControlInPalette.className = 'level-control-in-palette';
+                const levelLabel = document.createElement('label');
+                levelLabel.textContent = '현재 들여쓰기:';
+                const levelSelectInPalette = document.createElement('select');
+                for (let i = 0; i <= MAX_LEVEL; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `들여쓰기 ${i}`;
+                    levelSelectInPalette.appendChild(option);
+                }
+                levelControlInPalette.appendChild(levelLabel);
+                levelControlInPalette.appendChild(levelSelectInPalette);
+                editPalette.appendChild(levelControlInPalette);
+
+                const paletteActions = document.createElement('div');
+                paletteActions.className = 'palette-actions';
+                
+                const paletteSaveBtn = document.createElement('button');
+                paletteSaveBtn.className = 'palette-save-btn';
+                paletteSaveBtn.textContent = '저장';
+                paletteActions.appendChild(paletteSaveBtn);
+
+                const paletteDeleteBtn = document.createElement('button');
+                paletteDeleteBtn.className = 'palette-delete-btn';
+                paletteDeleteBtn.textContent = '항목 삭제';
+                paletteDeleteBtn.addEventListener('click', () => {
+                    const itemLi = editPalette.closest('li');
+                    if (itemLi) {
+                        if (currentEditPalette === editPalette) {
+                            currentEditPalette = null; 
+                        }
+                        itemLi.remove();
+                    }
+                });
+                paletteActions.appendChild(paletteDeleteBtn); 
+                
+                editPalette.appendChild(paletteActions);
+
+                li.appendChild(colorBarVertical); 
+                li.appendChild(editPalette); 
+
+                colorBarVertical.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const parentLi = colorBarVertical.closest('li'); 
+
+                    if (currentEditPalette && currentEditPalette !== editPalette) {
+                        let activeLiWithPalette = null;
+                        for (const item of eventList.children) {
+                            if (item.querySelector('.edit-palette') === currentEditPalette) {
+                                activeLiWithPalette = item;
+                                break;
+                            }
+                        }
+                        if (activeLiWithPalette) {
+                            const prevColorBar = activeLiWithPalette.querySelector('.item-color-bar-vertical');
+                            closeAllEditPalettes(false, activeLiWithPalette, prevColorBar);
+                        } else {
+                            closeAllEditPalettes(); 
+                        }
+                    }
+
+                    const isOpening = editPalette.style.display !== 'block';
+                    editPalette.style.display = isOpening ? 'block' : 'none';
+
+                    if (isOpening) {
+                        currentEditPalette = editPalette;
+                        originalPaletteState.color = colorBarVertical.style.backgroundColor;
+                        originalPaletteState.level = parentLi.dataset.level; 
+                        levelSelectInPalette.value = parentLi.dataset.level; 
+
+                        Array.from(colorGrid.children).forEach((btn, index) => {
+                            btn.onclick = () => {
+                                colorBarVertical.style.backgroundColor = colorPalette[index];
+                            };
+                        });
+                        paletteSaveBtn.onclick = () => {
+                            const newLevel = parseInt(levelSelectInPalette.value);
+                            parentLi.dataset.level = newLevel; 
+                            updateItemContentAreaPadding(parentLi); 
+                            closeAllEditPalettes(true);
+                        };
+                    } else {
+                        if (originalPaletteState.color) colorBarVertical.style.backgroundColor = originalPaletteState.color;
+                        if (originalPaletteState.level !== undefined) {
+                             parentLi.dataset.level = originalPaletteState.level; 
+                             updateItemContentAreaPadding(parentLi); 
+                        }
+                        currentEditPalette = null;
+                    }
+                });
+                
+                const contentArea = document.createElement('div');
+                contentArea.className = 'content-area';
+
+                const textAndLevelContainer = document.createElement('div');
+                textAndLevelContainer.className = 'event-text-container';
+
+                const span = document.createElement('span');
+                span.className = 'event-text';
+                span.textContent = eventTextValue;
+                span.addEventListener('dblclick', () => {
+                    if (!li.classList.contains('editing-text')) {
+                        enterTextEditMode(li, span, colorBarVertical);
+                    }
+                });
+                textAndLevelContainer.appendChild(span);
+                contentArea.appendChild(textAndLevelContainer);
+
+                const itemControlsDiv = document.createElement('div');
+                itemControlsDiv.className = 'item-controls';
+                contentArea.appendChild(itemControlsDiv);
+                
+                li.appendChild(contentArea);
+                
+                updateItemContentAreaPadding(li);
+
+                if (insertBeforeEl) {
+                    eventList.insertBefore(li, insertBeforeEl);
+                } else {
+                    eventList.appendChild(li);
+                }
+                
+                if (text === null) {
+                    eventInput.value = ''; 
+                    levelSelect.value = 0;
+                    eventInput.focus();
+                }
+                return li;
+            }
+
+            function enterTextEditMode(li, span, colorBar) {
+                closeAllEditPalettes(false, li, colorBar);
+                li.classList.add('editing-text');
+                span.contentEditable = 'true';
+                span.dataset.originalText = span.textContent;
+                
+                span.focus();
+                const range = document.createRange();
+                const sel = window.getSelection();
+                range.selectNodeContents(span); sel.removeAllRanges(); sel.addRange(range);
+
+                li.draggable = false;
+
+                function handleTextEditKeys(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        saveTextEdit(li, span, colorBar, handleTextEditKeys, saveBtn, cancelBtn);
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        cancelTextEdit(li, span, colorBar, handleTextEditKeys, saveBtn, cancelBtn);
+                    }
+                }
+                span.addEventListener('keydown', handleTextEditKeys);
+
+                const itemControlsDiv = li.querySelector('.item-controls');
+
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'save-text-btn';
+                saveBtn.textContent = '저장';
+                saveBtn.addEventListener('click', () => {
+                    saveTextEdit(li, span, colorBar, handleTextEditKeys, saveBtn, cancelBtn);
+                });
+
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'cancel-text-btn';
+                cancelBtn.textContent = '취소';
+                cancelBtn.addEventListener('click', () => {
+                    cancelTextEdit(li, span, colorBar, handleTextEditKeys, saveBtn, cancelBtn);
+                });
+                
+                itemControlsDiv.appendChild(cancelBtn);
+                itemControlsDiv.appendChild(saveBtn);
+            }
+
+            function saveTextEdit(li, span, colorBar, keydownListener, saveBtn, cancelBtn) {
+                span.contentEditable = 'false';
+                span.blur();
+                li.classList.remove('editing-text');
+                li.draggable = true;
+                span.removeEventListener('keydown', keydownListener);
+                
+                if (saveBtn) saveBtn.remove();
+                if (cancelBtn) cancelBtn.remove();
+            }
+
+            function cancelTextEdit(li, span, colorBar, keydownListener, saveBtn, cancelBtn) {
+                span.textContent = span.dataset.originalText;
+                
+                span.contentEditable = 'false';
+                span.blur();
+                li.classList.remove('editing-text');
+                li.draggable = true;
+                span.removeEventListener('keydown', keydownListener);
+                
+                if (saveBtn) saveBtn.remove();
+                if (cancelBtn) cancelBtn.remove();
+            }
+            
+            addButton.addEventListener('click', () => addEventItem());
+            eventInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addEventItem();
+            });
+
+            function getOrCreatePlaceholder() { if (!placeholder) { placeholder = document.createElement('div'); placeholder.classList.add('placeholder'); } return placeholder; }
+            eventList.addEventListener('dragstart', (e) => { if (e.target.tagName === 'LI' && !e.target.classList.contains('editing-text')) { draggedItem = e.target; setTimeout(() => e.target.classList.add('dragging'), 0); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', e.target.querySelector('.event-text').textContent); const li = e.target; const colorBar = li.querySelector('.item-color-bar-vertical'); closeAllEditPalettes(false, li, colorBar); } else { e.preventDefault(); } });
+            eventList.addEventListener('dragend', () => { if (draggedItem) draggedItem.classList.remove('dragging'); draggedItem = null; if (placeholder && placeholder.parentNode) placeholder.remove(); 
+                if(currentEditPalette){
+                    let activeLiWithPalette = null;
+                    for (const li of eventList.children) {
+                        if (li.querySelector('.edit-palette') === currentEditPalette) {
+                            activeLiWithPalette = li;
+                            break;
+                        }
+                    }
+                    if(activeLiWithPalette){
+                        const colorBar = activeLiWithPalette.querySelector('.item-color-bar-vertical');
+                        closeAllEditPalettes(false, activeLiWithPalette, colorBar); 
+                    } else {
+                        closeAllEditPalettes(); 
+                    }
+                }
+            });
+            eventList.addEventListener('dragover', (e) => { e.preventDefault(); if (!draggedItem) return; e.dataTransfer.dropEffect = 'move'; const currentPlaceholder = getOrCreatePlaceholder(); const targetLi = e.target.closest('li:not(.dragging)'); if (targetLi) { const rect = targetLi.getBoundingClientRect(); const mouseY = e.clientY; const mouseX = e.clientX; const isAfter = mouseY > rect.top + rect.height / 2; const indentThreshold = rect.left + 12 + 10 + INDENTATION_WIDTH * 0.5; const intendToIndent = mouseX > indentThreshold; const targetLevel = parseInt(targetLi.dataset.level) || 0; const newPlaceholderLevel = intendToIndent && targetLevel < MAX_LEVEL ? targetLevel + 1 : targetLevel; updatePlaceholderIndent(currentPlaceholder, newPlaceholderLevel); currentPlaceholder.dataset.targetLevel = newPlaceholderLevel; if (intendToIndent && targetLevel < MAX_LEVEL) { eventList.insertBefore(currentPlaceholder, targetLi.nextSibling); } else { let referenceNode = isAfter ? targetLi.nextSibling : targetLi; eventList.insertBefore(currentPlaceholder, referenceNode); } } else { const lastLi = eventList.querySelector('li:not(.dragging):last-child'); if (lastLi && e.clientY > lastLi.getBoundingClientRect().bottom) eventList.appendChild(currentPlaceholder); else if (!eventList.querySelector('li:not(.dragging)') || e.clientY < eventList.querySelector('li:not(.dragging)').getBoundingClientRect().top) eventList.insertBefore(currentPlaceholder, eventList.firstChild); else eventList.appendChild(currentPlaceholder); updatePlaceholderIndent(currentPlaceholder, 0); currentPlaceholder.dataset.targetLevel = 0; } });
+            eventList.addEventListener('drop', (e) => { e.preventDefault(); if (!draggedItem || !placeholder || !placeholder.parentNode) { if (placeholder && placeholder.parentNode) placeholder.remove(); return; } const targetLevel = parseInt(placeholder.dataset.targetLevel); draggedItem.dataset.level = targetLevel; updateItemContentAreaPadding(draggedItem); 
+                const droppedLevelSelectInPalette = draggedItem.querySelector('.edit-palette .level-control-in-palette select');
+                if(droppedLevelSelectInPalette) {
+                    droppedLevelSelectInPalette.value = targetLevel;
+                }
+                eventList.insertBefore(draggedItem, placeholder); placeholder.remove(); 
+            });
+        });
+    </script>
+</body>
+</html>
